@@ -23,18 +23,15 @@ sub new {
 }
 
 sub get {
-    my $self = shift;
-    my $url = shift;
-    my $response =  $self->make_restricted_request($url, 'GET');
+    my $response = get_raw(@_);
     if ($response->content) {
         return decode_json($response->content);
     }
 }
 
 sub get_raw {
-    my $self = shift;
-    my $url = shift;
-    return $self->make_restricted_request($url, 'GET');
+    my ($self, $url, %params) = @_;
+    return $self->make_restricted_request($url, 'GET', %params);
 }
 
 sub post {
