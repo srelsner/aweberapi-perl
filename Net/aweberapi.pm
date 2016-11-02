@@ -1,8 +1,10 @@
 package Net::AWeberAPI;
 
-use strict;
-use base qw(Net::OAuth::Simple);
+use parent qw(Net::OAuth::Simple);
 use JSON;
+
+our $debug = 1;
+our $VERSION = '0.1.0';
 
 sub new {
     my $class = shift;
@@ -18,8 +20,18 @@ sub new {
 
     return $class->SUPER::new( tokens => \%tokens,
                                protocol_version => '1.0a',
-                               urls => \%urls
+                               urls => \%urls,
+                               browser => Net::AWeberAPI::UserAgent->new()
                               );
+}
+
+#TODO: fix the scoping issue around $debug so that this works:
+sub debug {
+    my $self = shift;
+    if (@_) {
+        $self->{debug} = shift;
+    }
+    return $self->{debug};
 }
 
 sub get {
@@ -44,5 +56,31 @@ sub put {
 
 sub patch {
 
+}
+
+package Net::AWeberAPI::UserAgent;
+=head2 Custom UA
+
+Adds basic debug output to our API client and gives us a unique UA string
+
+=cut
+use parent 'LWP::UserAgent';
+
+sub new {
+    my $class = shift;
+    return $class->SUPER::new();
+}
+
+sub request {
+    my ($self, $request, @params) = @_;
+
+    $self->agent('Net::AweberAPI Perl/'.$VERSION);
+
+    my $response = $self->SUPER::request($request, @params);
+    if ($Net::AWeberAPI::debug) {
+        print "REQUEST:\n".$request->as_string . "\n";
+        print "RESPONSE BODY:\n".$response->content . "\n";
+    }
+    return $response;
 }
 1;
