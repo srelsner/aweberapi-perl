@@ -3,8 +3,7 @@ package Net::AWeberAPI;
 use parent qw(Net::OAuth::Simple);
 use JSON;
 
-our $debug = 1;
-our $VERSION = '0.1.0';
+our $VERSION = '0.1.1';
 
 sub new {
     my $class = shift;
@@ -25,20 +24,9 @@ sub new {
                               );
 }
 
-#TODO: fix the scoping issue around $debug so that this works:
-sub debug {
-    my $self = shift;
-    if (@_) {
-        $self->{debug} = shift;
-    }
-    return $self->{debug};
-}
-
 sub get {
     my $response = get_raw(@_);
-    if ($response->content) {
-        return decode_json($response->content);
-    }
+    return decode_json($response->content) if $response->content;
 }
 
 sub get_raw {
@@ -66,6 +54,8 @@ Adds basic debug output to our API client and gives us a unique UA string
 =cut
 use parent 'LWP::UserAgent';
 
+use Env qw(AWEBERAPI_DEBUG);
+
 sub new {
     my $class = shift;
     return $class->SUPER::new();
@@ -73,11 +63,11 @@ sub new {
 
 sub request {
     my ($self, $request, @params) = @_;
-
     $self->agent('Net::AweberAPI Perl/'.$VERSION);
 
     my $response = $self->SUPER::request($request, @params);
-    if ($Net::AWeberAPI::debug) {
+
+    if (defined $AWEBERAPI_DEBUG && $AWEBERAPI_DEBUG == 1) {
         print "REQUEST:\n".$request->as_string . "\n";
         print "RESPONSE BODY:\n".$response->content . "\n";
     }
